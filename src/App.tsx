@@ -10,6 +10,7 @@ import { UpcomingView } from './components/UpcomingView';
 import { ProfileView } from './components/ProfileView';
 import { StudioModal } from './components/StudioModal';
 import { BookingModal } from './components/BookingModal';
+import { BookingSuccessModal } from './components/BookingSuccessModal';
 import { ReferralModal } from './components/ReferralModal';
 import { ReviewsModal } from './components/ReviewsModal';
 import { Review } from './types';
@@ -30,6 +31,7 @@ export default function App() {
   const [selectedStudio, setSelectedStudio] = useState<Studio | null>(null);
   const [selectedReviewsStudio, setSelectedReviewsStudio] = useState<Studio | null>(null);
   const [selectedClassForBooking, setSelectedClassForBooking] = useState<ClassSession | null>(null);
+  const [successBooking, setSuccessBooking] = useState<Booking | null>(null);
   const [isReferralOpen, setIsReferralOpen] = useState(false);
 
   // Toast notification
@@ -199,6 +201,7 @@ export default function App() {
 
     setBookings((prev) => [newBooking, ...prev]);
     setSelectedClassForBooking(null);
+    setSuccessBooking(newBooking);
     showToast(`✓ Booked ${session.title} at ${session.studioName} for ${bookedFor}!`);
   };
 
@@ -329,6 +332,16 @@ export default function App() {
           setCurrentTab('credits');
         }}
         onRequireLogIn={() => setCurrentTab('profile')}
+      />
+
+      <BookingSuccessModal
+        booking={successBooking}
+        isOpen={!!successBooking}
+        onClose={() => setSuccessBooking(null)}
+        onGoToBookings={() => {
+          setSuccessBooking(null);
+          setCurrentTab('upcoming');
+        }}
       />
 
       <ReferralModal
