@@ -36,7 +36,7 @@ export const StudioModal: React.FC<StudioModalProps> = ({
                 ? 'bg-white text-red-500 ring-2 ring-red-500/20'
                 : 'bg-black/50 backdrop-blur-xs text-white hover:text-red-400'
             }`}
-            title={isFav ? 'Remove from priority favorites' : 'Prioritize under Search & Studios'}
+            title={isFav ? 'Remove from priority favorites' : 'Prioritize under Search Course'}
           >
             <Heart className={`w-5 h-5 transition-all ${isFav ? 'fill-red-500 text-red-500' : ''}`} />
           </button>

@@ -151,7 +151,7 @@ export const SearchView: React.FC<SearchViewProps> = ({
       <div className="flex justify-between items-end">
         <div>
           <h2 className="text-xl font-bold text-[#191c1e] tracking-tight">
-            {filteredStudios.length} {selectedCategory === 'All' ? 'Studios & Classes' : `${selectedCategory} Studios`}
+            {filteredStudios.length} {selectedCategory === 'All' ? 'Courses & Classes' : `${selectedCategory} Courses`}
           </h2>
           <p className="text-xs text-[#434656] mt-0.5">Near {location}, Singapore</p>
         </div>

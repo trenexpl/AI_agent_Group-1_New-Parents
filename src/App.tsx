@@ -56,7 +56,7 @@ export default function App() {
     setFavorites((prev) => {
       const isFav = !prev[studioId];
       if (isFav) {
-        showToast('❤️ Saved! Course listing prioritized under Search & Studios.');
+        showToast('❤️ Saved! Course listing prioritized under Search Course.');
       } else {
         showToast('Removed from prioritized favorites.');
       }

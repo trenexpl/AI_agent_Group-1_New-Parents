@@ -136,7 +136,7 @@ export const Header: React.FC<HeaderProps> = ({
                   : 'text-[#434656] hover:text-[#0042c8]'
               }`}
             >
-              Search & Studios
+              Search Course
             </button>
             <button
               onClick={() => onTabChange('upcoming')}

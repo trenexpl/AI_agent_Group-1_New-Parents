@@ -17,7 +17,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onTabChange, c
     },
     {
       id: 'search',
-      label: 'Search',
+      label: 'Search Course',
       icon: <Search className="w-5 h-5 mb-0.5" />,
     },
     {
