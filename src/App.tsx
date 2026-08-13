@@ -18,8 +18,8 @@ import { CheckCircle2, Sparkles } from 'lucide-react';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<TabType>('home');
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
-  const [user, setUser] = useState<UserProfile | null>(initialUserProfile);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [studios, setStudios] = useState<Studio[]>(mockStudios);
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
 
@@ -124,6 +124,7 @@ export default function App() {
   };
 
   const handleLogOut = () => {
+    setUser(null);
     setIsLoggedIn(false);
     showToast('👋 You have logged out successfully.');
   };
