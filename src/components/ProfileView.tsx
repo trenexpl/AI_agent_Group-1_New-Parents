@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { UserProfile, TabType } from '../types';
 import {
   Calendar,
@@ -20,6 +20,11 @@ import {
   EyeOff,
   CheckCircle2,
   AlertCircle,
+  Camera,
+  Upload,
+  Image as ImageIcon,
+  Check,
+  RotateCcw,
 } from 'lucide-react';
 
 interface ProfileViewProps {
@@ -31,7 +36,19 @@ interface ProfileViewProps {
   onSignUp: (data: { name: string; email: string; password: string; childName?: string; childAge?: number }) => void;
   onLogIn: (data: { email: string; password: string }) => void;
   onLogOut: () => void;
+  onUpdateAvatar?: (newAvatarUrl: string) => void;
 }
+
+const PRESET_AVATARS = [
+  { id: '1', label: 'Mom', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400' },
+  { id: '2', label: 'Dad', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400' },
+  { id: '3', label: 'Asian Mom', url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400' },
+  { id: '4', label: 'Asian Dad', url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400' },
+  { id: '5', label: 'Creative', url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400' },
+  { id: '6', label: 'Tech Parent', url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=400' },
+  { id: '7', label: 'Friendly Mom', url: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=400' },
+  { id: '8', label: 'Active Dad', url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=400' },
+];
 
 export const ProfileView: React.FC<ProfileViewProps> = ({
   user,
@@ -42,6 +59,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   onSignUp,
   onLogIn,
   onLogOut,
+  onUpdateAvatar,
 }) => {
   // Auth state
   const [authTab, setAuthTab] = useState<'login' | 'signup'>('login');
@@ -60,19 +78,55 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [childAge, setChildAge] = useState('8');
 
   // Modals state
-  const [activeModal, setActiveModal] = useState<'friends' | 'family' | 'settings' | 'help' | 'logoutConfirm' | null>(
+  const [activeModal, setActiveModal] = useState<'friends' | 'family' | 'settings' | 'help' | 'logoutConfirm' | 'editAvatar' | null>(
     null
   );
   const [familyList, setFamilyList] = useState(user?.familyMembers || []);
   const [newKidName, setNewKidName] = useState('');
   const [newKidAge, setNewKidAge] = useState('8');
 
-  // Sync family list when user changes
-  React.useEffect(() => {
+  // Avatar Edit state
+  const [selectedAvatarUrl, setSelectedAvatarUrl] = useState(user?.avatarUrl || '');
+  const [customAvatarInput, setCustomAvatarInput] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync avatar and family list when user changes
+  useEffect(() => {
+    if (user?.avatarUrl) {
+      setSelectedAvatarUrl(user.avatarUrl);
+    }
     if (user?.familyMembers) {
       setFamilyList(user.familyMembers);
     }
   }, [user]);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size is too large. Please upload an image under 5MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        setSelectedAvatarUrl(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveAvatar = () => {
+    const finalUrl = customAvatarInput.trim() || selectedAvatarUrl;
+    if (!finalUrl) return;
+    if (onUpdateAvatar) {
+      onUpdateAvatar(finalUrl);
+    }
+    setActiveModal(null);
+    setCustomAvatarInput('');
+  };
 
   const handleAddFamilyMember = (e: React.FormEvent) => {
     e.preventDefault();
@@ -391,22 +445,35 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     <div className="space-y-6 pb-24 pt-2 max-w-md mx-auto">
       {/* Profile Header */}
       <section className="flex flex-col items-center text-center space-y-3">
-        <div className="relative w-24 h-24">
+        <div className="relative w-24 h-24 group">
           <img
             src={user.avatarUrl}
             alt={user.name}
             className="w-full h-full rounded-full object-cover shadow-xs border-2 border-[#edeef0]"
           />
-          <span className="absolute bottom-0 right-0 w-6 h-6 bg-[#0042c8] text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-xs">
-            ✓
-          </span>
+          <button
+            onClick={() => setActiveModal('editAvatar')}
+            className="absolute bottom-0 right-0 bg-[#0042c8] text-white p-2 rounded-full border-2 border-white shadow-md hover:bg-[#0036a3] active:scale-95 transition-all cursor-pointer"
+            title="Edit Profile Picture"
+          >
+            <Camera className="w-3.5 h-3.5" />
+          </button>
         </div>
         <div>
           <h1 className="text-xl font-extrabold text-[#191c1e] tracking-tight">{user.name}</h1>
           <p className="text-xs font-semibold text-[#0042c8] mt-0.5">{user.email}</p>
-          <span className="inline-block mt-1 text-[11px] font-bold text-[#434656] bg-[#f3f4f6] px-2.5 py-0.5 rounded-full border border-[#c3c5d9]/30">
-            {user.membership}
-          </span>
+          <div className="flex items-center justify-center gap-2 mt-1.5">
+            <span className="text-[11px] font-bold text-[#434656] bg-[#f3f4f6] px-2.5 py-0.5 rounded-full border border-[#c3c5d9]/30">
+              {user.membership}
+            </span>
+            <button
+              onClick={() => setActiveModal('editAvatar')}
+              className="text-[11px] font-extrabold text-[#0042c8] hover:underline flex items-center gap-1 cursor-pointer bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100"
+            >
+              <Camera className="w-3 h-3" />
+              <span>Change Photo</span>
+            </button>
+          </div>
         </div>
       </section>
 
@@ -723,6 +790,150 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   Yes! Select your child in Family Profiles when reserving robotics or coding classes.
                 </p>
               </details>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT PROFILE PICTURE MODAL */}
+      {activeModal === 'editAvatar' && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full space-y-5 shadow-2xl overflow-hidden border border-[#c3c5d9]/30 my-auto">
+            <div className="flex justify-between items-center border-b border-[#c3c5d9]/20 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[#0042c8]/10 text-[#0042c8] flex items-center justify-center font-bold">
+                  <Camera className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-[#191c1e]">Edit Profile Photo</h3>
+                  <p className="text-[11px] text-[#434656]">Upload a photo or select a parent avatar</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveModal(null)}
+                className="w-8 h-8 rounded-full bg-[#f8f9fb] hover:bg-[#edeef0] text-[#191c1e] font-bold flex items-center justify-center cursor-pointer transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Current Selected Avatar Preview */}
+            <div className="flex flex-col items-center justify-center space-y-2 bg-[#f8f9fb] p-4 rounded-2xl border border-[#c3c5d9]/30">
+              <div className="relative w-28 h-28">
+                <img
+                  src={customAvatarInput.trim() || selectedAvatarUrl || user.avatarUrl}
+                  alt="Selected Preview"
+                  className="w-full h-full rounded-full object-cover shadow-md border-4 border-white"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400';
+                  }}
+                />
+                <span className="absolute bottom-1 right-1 bg-emerald-500 text-white p-1 rounded-full border-2 border-white shadow-xs">
+                  <Check className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <span className="text-xs font-bold text-[#191c1e]">Active Preview</span>
+            </div>
+
+            {/* Option 1: File Upload */}
+            <div className="space-y-2">
+              <label className="text-xs font-extrabold text-[#191c1e] flex items-center gap-1.5">
+                <Upload className="w-3.5 h-3.5 text-[#0042c8]" />
+                <span>Upload From Your Device</span>
+              </label>
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full py-3 px-4 bg-white border-2 border-dashed border-[#0042c8]/40 hover:border-[#0042c8] bg-blue-50/30 hover:bg-blue-50 text-[#0042c8] rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+              >
+                <Upload className="w-4 h-4" />
+                <span>Choose Image File (JPG, PNG)</span>
+              </button>
+            </div>
+
+            {/* Option 2: Choose from Preset Gallery */}
+            <div className="space-y-2">
+              <label className="text-xs font-extrabold text-[#191c1e] flex items-center gap-1.5">
+                <ImageIcon className="w-3.5 h-3.5 text-[#0042c8]" />
+                <span>Or Choose Preset Parent Avatar</span>
+              </label>
+              <div className="grid grid-cols-4 gap-2.5 max-h-40 overflow-y-auto pr-1">
+                {PRESET_AVATARS.map((item) => {
+                  const isSelected = selectedAvatarUrl === item.url && !customAvatarInput.trim();
+                  return (
+                    <button
+                      type="button"
+                      key={item.id}
+                      onClick={() => {
+                        setSelectedAvatarUrl(item.url);
+                        setCustomAvatarInput('');
+                      }}
+                      className={`relative flex flex-col items-center gap-1 p-1.5 rounded-xl border-2 transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-[#0042c8] bg-blue-50/60 shadow-xs scale-105'
+                          : 'border-[#c3c5d9]/30 hover:border-[#0042c8]/50 hover:bg-[#f8f9fb]'
+                      }`}
+                    >
+                      <img
+                        src={item.url}
+                        alt={item.label}
+                        className="w-11 h-11 rounded-full object-cover shadow-2xs"
+                      />
+                      <span className="text-[10px] font-bold text-[#191c1e] truncate max-w-full">
+                        {item.label}
+                      </span>
+                      {isSelected && (
+                        <div className="absolute top-0 right-0 bg-[#0042c8] text-white p-0.5 rounded-full translate-x-1 -translate-y-1">
+                          <Check className="w-2.5 h-2.5" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Option 3: Custom Web Link URL */}
+            <div className="space-y-1.5 pt-1 border-t border-[#c3c5d9]/20">
+              <label className="text-[11px] font-bold text-[#434656] block">
+                Or Paste Image Web Link (URL)
+              </label>
+              <input
+                type="url"
+                value={customAvatarInput}
+                onChange={(e) => setCustomAvatarInput(e.target.value)}
+                placeholder="https://example.com/my-photo.jpg"
+                className="w-full px-3 py-2 bg-[#f8f9fb] border border-[#c3c5d9]/40 rounded-xl text-xs text-[#191c1e] focus:ring-2 focus:ring-[#0042c8] outline-hidden"
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-2.5 pt-2 border-t border-[#c3c5d9]/20">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveModal(null);
+                  setCustomAvatarInput('');
+                }}
+                className="flex-1 py-3 bg-[#f8f9fb] hover:bg-[#edeef0] text-[#191c1e] font-bold text-xs rounded-full border border-[#c3c5d9]/30 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveAvatar}
+                className="flex-1 py-3 bg-[#0042c8] hover:bg-[#0036a3] text-white font-extrabold text-xs rounded-full shadow-md active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Check className="w-4 h-4" />
+                <span>Save Profile Photo</span>
+              </button>
             </div>
           </div>
         </div>

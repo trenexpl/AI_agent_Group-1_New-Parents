@@ -126,6 +126,11 @@ export default function App() {
     showToast('👋 You have logged out successfully.');
   };
 
+  const handleUpdateAvatar = (newAvatarUrl: string) => {
+    setUser((prev) => (prev ? { ...prev, avatarUrl: newAvatarUrl } : null));
+    showToast('📸 Profile photo updated successfully!');
+  };
+
   const handleAddReview = (studioId: string, newReviewData: Omit<Review, 'id' | 'studioId' | 'date'>) => {
     const newReview: Review = {
       id: `rev_${Date.now()}`,
@@ -281,6 +286,7 @@ export default function App() {
             onSignUp={handleSignUp}
             onLogIn={handleLogIn}
             onLogOut={handleLogOut}
+            onUpdateAvatar={handleUpdateAvatar}
           />
         )}
       </main>
